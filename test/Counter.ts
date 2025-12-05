@@ -1,46 +1,33 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 
-import { network } from "hardhat";
+import { network } from 'hardhat';
+import { createCouterFixture, createUpgradeFixture } from './fixture.js';
+import { keccak256, toHex } from 'viem';
 
-describe("Counter", async function () {
-  const { viem } = await network.connect();
-  const publicClient = await viem.getPublicClient();
+describe('Counter', async function () {
+  describe('Increment', async function () {
+    it('Should emit the Increment event when calling the inc() function', async function () {
+      const connection = await network.connect();
+      const { counter, admin, users } = await createCouterFixture(connection);
 
-  it("Should emit the Increment event when calling the inc() function", async function () {
-    const counter = await viem.deployContract("Counter");
-
-    await viem.assertions.emitWithArgs(
-      counter.write.inc(),
-      counter,
-      "Increment",
-      [1n],
-    );
-  });
-
-  it("The sum of the Increment events should match the current value", async function () {
-    const counter = await viem.deployContract("Counter");
-    const deploymentBlockNumber = await publicClient.getBlockNumber();
-
-    // run a series of increments
-    for (let i = 1n; i <= 10n; i++) {
-      await counter.write.incBy([i]);
-    }
-
-    const events = await publicClient.getContractEvents({
-      address: counter.address,
-      abi: counter.abi,
-      eventName: "Increment",
-      fromBlock: deploymentBlockNumber,
-      strict: true,
+      await counter.write.inc({ account: users[0].account });
     });
+  });
+  describe('UpgradeTest', async function () {
+    it('Should upgrade the counter to the v2 implementation', async function () {
+      const connection = await network.connect();
+      const { counter, admin, users, viem } = await createUpgradeFixture(connection);
 
-    // check that the aggregated events match the current value
-    let total = 0n;
-    for (const event of events) {
-      total += event.args.by;
-    }
+      await viem.assertions.revertWithCustomError(
+        counter.write.inc({ account: users[0].account }),
+        counter,
+        'AccessControlUnauthorizedAccount'
+      );
 
-    assert.equal(total, await counter.read.x());
+      await counter.write.grantRole([keccak256(toHex('INCREMENT_ROLE')), users[0].account.address]);
+
+      await counter.write.inc({ account: users[0].account });
+    });
   });
 });

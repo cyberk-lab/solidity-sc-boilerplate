@@ -1,18 +1,24 @@
 What I do:
+
 1. Init a new hardhat project
+
 ```bash
 pnpm dlx hardhat --init
 ```
+
 With below options:
-  - hardhat-3
-  - node-test-runner-viem
+
+- hardhat-3
+- node-test-runner-viem
 
 2. Install openzeppelin contracts
+
 ```bash
 pnpm add -D @openzeppelin/contracts @openzeppelin/contracts-upgradeable
 ```
 
 3. Configure Network Credentials
+
 - For ignore mistake, each contract project should have difference PK, so rename in hardhat.config.ts, rename `SEPOLIA_PRIVATE_KEY` to `BOILERPLATE_SEPOLIA_PRIVATE_KEY`
 - Configure SEPOLIA_RPC_URL and BOILERPLATE_SEPOLIA_PRIVATE_KEY in keystore
 
@@ -22,9 +28,31 @@ npx hardhat keystore set BOILERPLATE_SEPOLIA_PRIVATE_KEY
 ```
 
 4. Plugins:
+
 - hardhat-network-helpers
 - hardhat-viem-assertions
-- custom plugins (/plugins/*)
+- custom plugins (/plugins/\*)
+
 ```bash
 pnpm add -D @nomicfoundation/hardhat-network-helpers @nomicfoundation/hardhat-viem-assertions
 ```
+
+- Add plugins in hardhat.config.ts
+
+```ts
+plugins: [
+  "@nomicfoundation/hardhat-network-helpers",
+  "@nomicfoundation/hardhat-viem-assertions",
+  "./plugins/viem-test",
+],
+```
+
+5. Code Formatting:
+
+- With customized prettierrc
+
+```bash
+pnpm add -D prettier prettier-plugin-solidity
+```
+
+6.

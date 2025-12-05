@@ -1,9 +1,16 @@
-import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
+import { buildModule } from '@nomicfoundation/hardhat-ignition/modules';
 
-export default buildModule("CounterModule", (m) => {
-  const counter = m.contract("Counter");
+export default buildModule('CounterModule', (m) => {
+  const admin = m.getParameter('admin');
 
-  m.call(counter, "incBy", [5n]);
+  const counterImpl = m.contract('Counter', [], { id: 'CounterImpl' });
+  const couterProxy = m.contract(
+    'ERC1967Proxy',
+    [counterImpl, m.encodeFunctionCall(counterImpl, 'initialize', [admin])],
+    {
+      id: 'CounterProxy',
+    }
+  );
 
-  return { counter };
+  return { counter: m.contractAt('Counter', couterProxy) };
 });

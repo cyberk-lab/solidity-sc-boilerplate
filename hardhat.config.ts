@@ -1,7 +1,7 @@
-import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
-import hardhatNetworkHelpers from "@nomicfoundation/hardhat-network-helpers";
-import hardhatViemAssertions from "@nomicfoundation/hardhat-viem-assertions";
-import { configVariable, defineConfig } from "hardhat/config";
+import hardhatToolboxViemPlugin from '@nomicfoundation/hardhat-toolbox-viem';
+import hardhatNetworkHelpers from '@nomicfoundation/hardhat-network-helpers';
+import hardhatViemAssertions from '@nomicfoundation/hardhat-viem-assertions';
+import { configVariable, defineConfig } from 'hardhat/config';
 
 export default defineConfig({
   plugins: [
@@ -17,12 +17,16 @@ export default defineConfig({
     },
   ],
   solidity: {
+    npmFilesToBuild: [
+      '@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol',
+      '@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol',
+    ],
     profiles: {
       default: {
-        version: "0.8.28",
+        version: '0.8.28',
       },
       production: {
-        version: "0.8.28",
+        version: '0.8.28',
         settings: {
           optimizer: {
             enabled: true,
@@ -34,18 +38,18 @@ export default defineConfig({
   },
   networks: {
     hardhatMainnet: {
-      type: "edr-simulated",
-      chainType: "l1",
+      type: 'edr-simulated',
+      chainType: 'l1',
     },
     hardhatOp: {
-      type: "edr-simulated",
-      chainType: "op",
+      type: 'edr-simulated',
+      chainType: 'op',
     },
     sepolia: {
-      type: "http",
-      chainType: "l1",
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("BOILERPLATE_SEPOLIA_PRIVATE_KEY")],
+      type: 'http',
+      chainType: 'l1',
+      url: configVariable('SEPOLIA_RPC_URL'),
+      accounts: [configVariable('BOILERPLATE_SEPOLIA_PRIVATE_KEY')],
     },
   },
 });
