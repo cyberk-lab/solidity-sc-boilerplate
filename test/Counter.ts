@@ -1,23 +1,32 @@
-import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { network } from 'hardhat';
 import { createCouterFixture, createUpgradeFixture } from './fixture.js';
-import { keccak256, toHex } from 'viem';
+import { getAddress, keccak256, toHex } from 'viem';
+import { extractEvent } from '../shared/utils.js';
+import assert from 'node:assert';
 
 describe('Counter', async function () {
   describe('Increment', async function () {
     it('Should emit the Increment event when calling the inc() function', async function () {
       const connection = await network.connect();
-      const { counter, admin, users } = await createCouterFixture(connection);
+      const { counter, users, viem } = await createCouterFixture(connection);
 
-      await counter.write.inc({ account: users[0].account });
+      const user = users[0].account;
+
+      const incTx = counter.write.inc({ account: user });
+      viem.assertions.emitWithArgs(incTx, counter, 'Increment', [1n, getAddress(user.address)]);
+
+      const txHash = await incTx;
+      const event = await extractEvent(connection, counter, txHash, 'Increment');
+      assert.equal(event?.args.x, 1n);
+      assert.equal(event?.args.by, getAddress(user.address));
     });
   });
   describe('UpgradeTest', async function () {
     it('Should upgrade the counter to the v2 implementation', async function () {
       const connection = await network.connect();
-      const { counter, admin, users, viem } = await createUpgradeFixture(connection);
+      const { counter, users, viem } = await createUpgradeFixture(connection);
 
       await viem.assertions.revertWithCustomError(
         counter.write.inc({ account: users[0].account }),
