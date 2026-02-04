@@ -4,7 +4,7 @@ export default buildModule('CounterModule', (m) => {
   const admin = m.getParameter('admin');
 
   const counterImpl = m.contract('Counter', [], { id: 'CounterImpl' });
-  const couterProxy = m.contract(
+  const counterProxy = m.contract(
     'ERC1967Proxy',
     [counterImpl, m.encodeFunctionCall(counterImpl, 'initialize', [admin])],
     {
@@ -12,5 +12,5 @@ export default buildModule('CounterModule', (m) => {
     }
   );
 
-  return { counter: m.contractAt('Counter', couterProxy) };
+  return { counter: m.contractAt('Counter', counterProxy) };
 });

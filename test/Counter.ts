@@ -1,42 +1,136 @@
 import { describe, it } from 'node:test';
-
 import { network } from 'hardhat';
-import { createCouterFixture, createUpgradeFixture } from './fixture.js';
-import { getAddress, keccak256, toHex } from 'viem';
+import { createCounterFixture, createUpgradeFixture, deployImplementation } from './fixture.js';
+import { getAddress, keccak256, toHex, encodeFunctionData } from 'viem';
 import { extractEvent } from '../shared/utils.js';
 import assert from 'node:assert';
 
+const INCREMENT_ROLE = keccak256(toHex('INCREMENT_ROLE'));
+
 describe('Counter', async function () {
-  describe('Increment', async function () {
-    it('Should emit the Increment event when calling the inc() function', async function () {
+  describe('V1', async function () {
+    it('Should initialize correctly and prevent re-init', async function () {
       const connection = await network.connect();
-      const { counter, users, viem } = await createCouterFixture(connection);
+      const { counter, admin, viem } = await createCounterFixture(connection);
 
-      const user = users[0].account;
-
-      const incTx = counter.write.inc({ account: user });
-      viem.assertions.emitWithArgs(incTx, counter, 'Increment', [1n, getAddress(user.address)]);
-
-      const txHash = await incTx;
-      const event = await extractEvent(connection, counter, txHash, 'Increment');
-      assert.equal(event?.args.x, 1n);
-      assert.equal(event?.args.by, getAddress(user.address));
-    });
-  });
-  describe('UpgradeTest', async function () {
-    it('Should upgrade the counter to the v2 implementation', async function () {
-      const connection = await network.connect();
-      const { counter, users, viem } = await createUpgradeFixture(connection);
+      assert.equal(await counter.read.x(), 0n);
+      assert.equal(await counter.read.defaultAdminDelay(), 86400n); // 1 day
 
       await viem.assertions.revertWithCustomError(
-        counter.write.inc({ account: users[0].account }),
+        counter.write.initialize([admin.account.address]),
+        counter,
+        'InvalidInitialization'
+      );
+    });
+
+    it('Should increment and emit event', async function () {
+      const connection = await network.connect();
+      const { counter, users, viem } = await createCounterFixture(connection);
+
+      const incTx = counter.write.inc({ account: users[0].account });
+      await viem.assertions.emitWithArgs(incTx, counter, 'Increment', [1n, getAddress(users[0].account.address)]);
+
+      assert.equal(await counter.read.x(), 1n);
+    });
+
+    it('Should only allow admin to upgrade', async function () {
+      const connection = await network.connect();
+      const { counter, admin, users, viem } = await createCounterFixture(connection);
+
+      const counterV2 = await viem.deployContract('CounterV2');
+
+      await viem.assertions.revertWithCustomError(
+        counter.write.upgradeToAndCall([counterV2.address, '0x'], { account: users[0].account }),
         counter,
         'AccessControlUnauthorizedAccount'
       );
 
-      await counter.write.grantRole([keccak256(toHex('INCREMENT_ROLE')), users[0].account.address]);
+      await counter.write.upgradeToAndCall([counterV2.address, '0x'], { account: admin.account });
+    });
+
+    it('Should prevent direct implementation initialization', async function () {
+      const connection = await network.connect();
+      const { counterImpl, viem } = await deployImplementation(connection);
+
+      await viem.assertions.revertWithCustomError(
+        counterImpl.write.initialize(['0x0000000000000000000000000000000000000001']),
+        counterImpl,
+        'InvalidInitialization'
+      );
+    });
+  });
+
+  describe('Upgrade', async function () {
+    it('Should preserve x and call initializeV2', async function () {
+      const connection = await network.connect();
+      const { counter, admin, users, viem } = await createCounterFixture(connection);
 
       await counter.write.inc({ account: users[0].account });
+      await counter.write.inc({ account: users[0].account });
+
+      const counterV2Impl = await viem.deployContract('CounterV2');
+      const initData = encodeFunctionData({
+        abi: counterV2Impl.abi,
+        functionName: 'initializeV2',
+        args: [users[0].account.address],
+      });
+
+      await counter.write.upgradeToAndCall([counterV2Impl.address, initData], { account: admin.account });
+
+      const counterV2 = await viem.getContractAt('CounterV2', counter.address);
+      assert.equal(await counterV2.read.x(), 2n);
+      assert.equal(await counterV2.read.y(), 0n);
+      assert.equal(await counterV2.read.hasRole([INCREMENT_ROLE, users[0].account.address]), true);
+    });
+
+    it('Should prevent initializeV2 re-call', async function () {
+      const connection = await network.connect();
+      const { counter, users, viem } = await createUpgradeFixture(connection);
+
+      await viem.assertions.revertWithCustomError(
+        counter.write.initializeV2([users[1].account.address]),
+        counter,
+        'InvalidInitialization'
+      );
+    });
+  });
+
+  describe('V2', async function () {
+    it('Should require INCREMENT_ROLE to inc()', async function () {
+      const connection = await network.connect();
+      const { counter, users, viem } = await createUpgradeFixture(connection);
+
+      await viem.assertions.revertWithCustomError(
+        counter.write.inc({ account: users[1].account }),
+        counter,
+        'AccessControlUnauthorizedAccount'
+      );
+
+      await counter.write.inc({ account: users[0].account });
+      assert.equal(await counter.read.x(), 1n);
+      assert.equal(await counter.read.y(), 1n);
+    });
+
+    it('Should emit both events', async function () {
+      const connection = await network.connect();
+      const { counter, users, viem } = await createUpgradeFixture(connection);
+
+      const incTx = counter.write.inc({ account: users[0].account });
+      await viem.assertions.emitWithArgs(incTx, counter, 'Increment', [1n, getAddress(users[0].account.address)]);
+      await viem.assertions.emitWithArgs(incTx, counter, 'IncrementY', [1n, getAddress(users[0].account.address)]);
+    });
+
+    it('Should only allow admin to upgrade', async function () {
+      const connection = await network.connect();
+      const { counter, users, viem } = await createUpgradeFixture(connection);
+
+      const counterV3 = await viem.deployContract('CounterV2');
+
+      await viem.assertions.revertWithCustomError(
+        counter.write.upgradeToAndCall([counterV3.address, '0x'], { account: users[0].account }),
+        counter,
+        'AccessControlUnauthorizedAccount'
+      );
     });
   });
 });

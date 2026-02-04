@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {AccessControlDefaultAdminRulesUpgradeable} from "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlDefaultAdminRulesUpgradeable.sol";
 
 contract Counter is AccessControlDefaultAdminRulesUpgradeable, UUPSUpgradeable {
@@ -16,6 +16,7 @@ contract Counter is AccessControlDefaultAdminRulesUpgradeable, UUPSUpgradeable {
 
     function initialize(address admin) public initializer {
         __AccessControlDefaultAdminRules_init(1 days, admin);
+        __UUPSUpgradeable_init();
     }
 
     function inc() public {
@@ -23,5 +24,5 @@ contract Counter is AccessControlDefaultAdminRulesUpgradeable, UUPSUpgradeable {
         emit Increment(x, msg.sender);
     }
 
-    function _authorizeUpgrade(address newImplementation) internal virtual override {}
+    function _authorizeUpgrade(address) internal virtual override onlyRole(DEFAULT_ADMIN_ROLE) {}
 }
