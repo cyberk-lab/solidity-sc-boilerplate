@@ -2,6 +2,19 @@
   "name": "solidity-sc-boilerplate",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "build": "hardhat compile",
+    "test": "hardhat test",
+    "test:forge": "forge test -vvv",
+    "test:fuzz": "forge test --match-path 'test/foundry/*.fuzz.t.sol' -vvv",
+    "test:invariant": "forge test --match-path 'test/foundry/*.invariant.t.sol' -vvv",
+    "coverage:forge": "forge coverage",
+    "gas:forge": "forge test --gas-report",
+    "lint:sol": "solhint 'contracts/**/*.sol'",
+    "security:slither": "slither . --config-file slither.config.json",
+    "security:all": "pnpm run security:slither && pnpm run test:fuzz && pnpm run test:invariant",
+    "verify": "hardhat verify"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.5",
     "@nomicfoundation/hardhat-network-helpers": "^3.0.3",
@@ -20,6 +33,7 @@
     "luxon": "^3.7.2",
     "prettier": "^3.7.4",
     "prettier-plugin-solidity": "^2.2.0",
+    "solhint": "^5.0.0",
     "typescript": "~5.8.0",
     "viem": "^2.30.0"
   }

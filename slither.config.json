@@ -1,0 +1,10 @@
+{
+  "detectors_to_run": "all",
+  "exclude_informational": false,
+  "exclude_low": false,
+  "filter_paths": "node_modules,forge-std,foundry-out",
+  "solc_remaps": [
+    "@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/",
+    "@openzeppelin/contracts-upgradeable/=node_modules/@openzeppelin/contracts-upgradeable/"
+  ]
+}

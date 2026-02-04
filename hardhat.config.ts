@@ -34,6 +34,15 @@ export default defineConfig({
           },
         },
       },
+      smt: {
+        version: '0.8.28',
+        settings: {
+          modelChecker: {
+            engine: 'chc',
+            targets: ['assert', 'underflow', 'overflow', 'divByZero'],
+          },
+        },
+      },
     },
   },
   networks: {
