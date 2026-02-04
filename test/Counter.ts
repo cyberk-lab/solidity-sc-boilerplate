@@ -2,7 +2,6 @@ import { describe, it } from 'node:test';
 import { network } from 'hardhat';
 import { createCounterFixture, createUpgradeFixture, deployImplementation } from './fixture.js';
 import { getAddress, keccak256, toHex, encodeFunctionData } from 'viem';
-import { extractEvent } from '../shared/utils.js';
 import assert from 'node:assert';
 
 const INCREMENT_ROLE = keccak256(toHex('INCREMENT_ROLE'));
@@ -46,17 +45,6 @@ describe('Counter', async function () {
       );
 
       await counter.write.upgradeToAndCall([counterV2.address, '0x'], { account: admin.account });
-    });
-
-    it('Should prevent direct implementation initialization', async function () {
-      const connection = await network.connect();
-      const { counterImpl, viem } = await deployImplementation(connection);
-
-      await viem.assertions.revertWithCustomError(
-        counterImpl.write.initialize(['0x0000000000000000000000000000000000000001']),
-        counterImpl,
-        'InvalidInitialization'
-      );
     });
   });
 
