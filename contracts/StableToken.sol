@@ -38,6 +38,14 @@ contract StableToken is ERC20Upgradeable, ERC20PermitUpgradeable, AccessControlD
         _mint(to, amount);
     }
 
+    /// @notice Burns tokens from a specified account
+    /// @dev Restricted to accounts with the MINTER_ROLE
+    /// @param from The address to burn tokens from
+    /// @param amount The amount of tokens to burn
+    function burn(address from, uint256 amount) external onlyRole(MINTER_ROLE) {
+        _burn(from, amount);
+    }
+
     /// @notice Authorizes a contract upgrade
     /// @dev Restricted to accounts with the DEFAULT_ADMIN_ROLE
     /// @param newImplementation The address of the new implementation contract (unused but required by interface)

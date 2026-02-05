@@ -98,18 +98,27 @@ oracle(
 Template: `openspec/templates/tasks.md`
 Verifiable implementation checklist. Reference Specs (what) and Design (how).
 
-### 7. Validation
-- Oracle Final Review
+### 7. Validation (2 mandatory steps — do NOT skip either)
+
+**Step A — Oracle Final Review (REQUIRED):**
 ```
 oracle(
   task: "Review plan completeness and clarity",
-  context: "Plan ready. Check for gaps, unclear beads, missing deps.",
-  files: ["openspec/changes/<change-id>/tasks.md"]
+  context: "Plan ready. Check for gaps, unclear items, missing deps.",
+  files: [
+    "openspec/changes/<change-id>/tasks.md",
+    "openspec/changes/<change-id>/design.md",
+    "openspec/changes/<change-id>/specs/<cap>/spec.md"
+  ]
 )
 ```
+Act on Oracle feedback: fix gaps, clarify tasks, add missing deps before proceeding.
+
+**Step B — CLI Validation (REQUIRED):**
 - Run: `openspec validate <change-id> --strict --no-interactive`
 - If errors, debug with: `openspec show <change-id> --json --deltas-only`
-- **STOP** and ask for user approval before moving to Implementation.
+
+**STOP** and ask for user approval before moving to Implementation.
 
 ## Stage 2: Implement
 

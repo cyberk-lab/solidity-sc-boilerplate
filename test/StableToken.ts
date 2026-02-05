@@ -75,6 +75,51 @@ describe('StableToken', async function () {
     });
   });
 
+  describe('Burning', async function () {
+    it('Should allow MINTER_ROLE to burn', async function () {
+      const connection = await network.connect();
+      const { stableToken, admin, minter, users, viem } = await createStableTokenFixture(connection);
+
+      await stableToken.write.grantRole([MINTER_ROLE, minter.account.address], { account: admin.account });
+
+      const mintAmount = parseEther('1000');
+      await stableToken.write.mint([users[0].account.address, mintAmount], { account: minter.account });
+
+      const burnAmount = parseEther('500');
+      const burnTx = stableToken.write.burn([users[0].account.address, burnAmount], { account: minter.account });
+      await viem.assertions.emitWithArgs(burnTx, stableToken, 'Transfer', [
+        getAddress(users[0].account.address),
+        zeroAddress,
+        burnAmount,
+      ]);
+
+      assert.equal(await stableToken.read.balanceOf([users[0].account.address]), parseEther('500'));
+      assert.equal(await stableToken.read.totalSupply(), parseEther('500'));
+    });
+
+    it('Should reject burn from non-MINTER_ROLE', async function () {
+      const connection = await network.connect();
+      const { stableToken, users, viem } = await createStableTokenFixture(connection);
+
+      await viem.assertions.revertWithCustomError(
+        stableToken.write.burn([users[0].account.address, parseEther('100')], { account: users[0].account }),
+        stableToken,
+        'AccessControlUnauthorizedAccount'
+      );
+    });
+
+    it('Should reject burn from admin without MINTER_ROLE', async function () {
+      const connection = await network.connect();
+      const { stableToken, admin, viem } = await createStableTokenFixture(connection);
+
+      await viem.assertions.revertWithCustomError(
+        stableToken.write.burn([admin.account.address, parseEther('100')], { account: admin.account }),
+        stableToken,
+        'AccessControlUnauthorizedAccount'
+      );
+    });
+  });
+
   describe('ERC20 Transfers', async function () {
     it('Should transfer tokens between accounts', async function () {
       const connection = await network.connect();
