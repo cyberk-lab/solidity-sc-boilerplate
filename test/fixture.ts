@@ -1,6 +1,7 @@
 import { NetworkConnection } from 'hardhat/types/network';
 import { runDeployTask } from '../tasks/deploy.js';
 import UpgradeModule from '../ignition/modules/Upgrade.js';
+import StableTokenModule from '../ignition/modules/StableToken.js';
 
 export const createCounterFixture = async (connection: NetworkConnection) => {
   const { viem } = connection;
@@ -30,6 +31,23 @@ export const createUpgradeFixture = async (connection: NetworkConnection) => {
   });
 
   return { counter, admin, users, viem };
+};
+
+export const createStableTokenFixture = async (connection: NetworkConnection) => {
+  const { ignition, viem } = connection;
+  const publicClient = await viem.getPublicClient();
+
+  const [admin, minter, ...users] = await viem.getWalletClients();
+
+  const { stableToken } = await ignition.deploy(StableTokenModule, {
+    parameters: {
+      StableTokenModule: {
+        admin: admin.account.address,
+      },
+    },
+  });
+
+  return { stableToken, admin, minter, users, publicClient, viem };
 };
 
 export const deployImplementation = async (connection: NetworkConnection) => {
