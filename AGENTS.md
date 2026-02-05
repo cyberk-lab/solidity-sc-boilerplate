@@ -4,6 +4,10 @@ glob:
 description:
 ---
 
+# AGENTS.md
+
+For tech stack, architecture, and code conventions, see `openspec/project.md`.
+
 # Skill Loader
 
 Automatically use skills in the following contexts:
@@ -12,23 +16,6 @@ Automatically use skills in the following contexts:
 | :------------------ | :------------------------------------------------------------------------- |
 | `openspec`          | proposal, spec, change, plan, kế hoạch                                     |
 | `solidity-security` | solidity, contract, audit, security, gas, optimize, upgrade, vulnerability |
-
-# AGENTS.md
-
-## Commands
-
-- Build: `pnpm run build` (hardhat compile)
-- Test (Hardhat): `pnpm run test` | single: `pnpm run test -- --grep "test name"`
-- Test (Foundry): `pnpm run test:forge` | single: `forge test --match-test testFuncName -vvv`
-- Fuzz: `pnpm run test:fuzz` | Invariant: `pnpm run test:invariant`
-- Lint: `pnpm run lint:sol` | Security: `pnpm run security:slither`
-
-## Architecture
-
-- **Solidity ^0.8.28** with Hardhat v3 + Foundry dual-test setup, OpenZeppelin upgradeable contracts (UUPS pattern)
-- `contracts/` — Solidity sources | `test/` — Hardhat tests (TypeScript, node:test + viem) | `test/foundry/` — Forge tests (fuzz/invariant)
-- `shared/` — TS utils/constants for tests/scripts | `plugins/` — custom Hardhat plugins | `ignition/` — deployment modules
-- Hardhat tests use `viem` client (not ethers); assertions via `viem.assertions.emitWithArgs` / `revertWithCustomError`
 
 ## Code Style
 

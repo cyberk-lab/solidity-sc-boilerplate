@@ -52,10 +52,8 @@ contract StableTokenFuzzTest is Test {
         stableToken.mintReward(rewardAmount);
     }
 
-    function testFuzz_LinearDecayRestoresCapacity(uint256 supply, uint256 elapsed) public {
+    function testFuzz_UtcDayResetRestoresCapacity(uint256 supply) public {
         supply = bound(supply, 1e18, 1e27);
-        elapsed = bound(elapsed, 0, 2 days);
-
         _mintSupply(supply);
 
         uint256 maxReward = supply * DAILY_CAP_BPS / 10_000;
@@ -63,22 +61,13 @@ contract StableTokenFuzzTest is Test {
         vm.prank(distributor);
         stableToken.mintReward(maxReward);
 
-        vm.warp(block.timestamp + elapsed);
-
-        uint256 available = stableToken.availableRewardMint();
+        uint256 currentDay = block.timestamp / 86400;
+        vm.warp((currentDay + 1) * 86400);
 
         uint256 newTotalSupply = supply + maxReward;
-        uint256 newMaxMint = newTotalSupply * DAILY_CAP_BPS / 10_000;
-        uint256 currentMinted;
-        if (elapsed >= 1 days) {
-            currentMinted = 0;
-        } else {
-            uint256 decayed = maxReward * elapsed / 1 days;
-            currentMinted = maxReward - decayed;
-        }
-        uint256 expected = newMaxMint > currentMinted ? newMaxMint - currentMinted : 0;
-
-        assertLe(available > expected ? available - expected : expected - available, 1);
+        uint256 expected = newTotalSupply * DAILY_CAP_BPS / 10_000;
+        uint256 available = stableToken.availableRewardMint();
+        assertEq(available, expected);
     }
 
     function testFuzz_OnlyDistributorCanMintReward(address caller) public {

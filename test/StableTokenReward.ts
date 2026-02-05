@@ -119,7 +119,7 @@ describe('StableToken Reward Minting', async function () {
       await stableToken.write.mintReward([parseEther('5000')], { account: users[0].account });
     });
 
-    it('Should restore ~50% capacity after 12 hours', async function () {
+    it('Should NOT restore capacity within same UTC day', async function () {
       const connection = await network.connect();
       const { stableToken, admin, minter, users, viem } = await createStableTokenFixture(connection);
 
@@ -134,16 +134,26 @@ describe('StableToken Reward Minting', async function () {
         account: admin.account,
       });
 
-      await stableToken.write.mintReward([parseEther('10000')], { account: users[0].account });
-
       const testClient = await viem.getTestClient();
-      await testClient.increaseTime({ seconds: 12 * 3600 });
+      const publicClient = await viem.getPublicClient();
+
+      const futureDay = BigInt(Math.floor(Date.now() / 1000)) / 86400n + 10n;
+      const dayStart = futureDay * 86400n;
+      await testClient.setNextBlockTimestamp({ timestamp: dayStart + 3600n });
       await testClient.mine({ blocks: 1 });
 
       await stableToken.write.mintReward([parseEther('5000')], { account: users[0].account });
+
+      const availableAfterMint = await stableToken.read.availableRewardMint();
+
+      await testClient.setNextBlockTimestamp({ timestamp: dayStart + 43200n });
+      await testClient.mine({ blocks: 1 });
+
+      const availableAfterWait = await stableToken.read.availableRewardMint();
+      assert.equal(availableAfterWait, availableAfterMint);
     });
 
-    it('Should restore full capacity after 24 hours', async function () {
+    it('Should restore full capacity on new UTC day', async function () {
       const connection = await network.connect();
       const { stableToken, admin, minter, users, viem } = await createStableTokenFixture(connection);
 
@@ -161,7 +171,12 @@ describe('StableToken Reward Minting', async function () {
       await stableToken.write.mintReward([parseEther('10000')], { account: users[0].account });
 
       const testClient = await viem.getTestClient();
-      await testClient.increaseTime({ seconds: 24 * 3600 + 1 });
+      const publicClient = await viem.getPublicClient();
+      const block = await publicClient.getBlock();
+      const currentDay = block.timestamp / 86400n;
+      const startOfNextDay = (currentDay + 1n) * 86400n;
+      const secondsUntilNextDay = Number(startOfNextDay - block.timestamp);
+      await testClient.increaseTime({ seconds: secondsUntilNextDay + 1 });
       await testClient.mine({ blocks: 1 });
 
       await stableToken.write.mintReward([parseEther('10000')], { account: users[0].account });
@@ -231,13 +246,13 @@ describe('StableToken Reward Minting', async function () {
       const connection = await network.connect();
       const { stableToken, admin, viem } = await createStableTokenFixture(connection);
 
-      const setTx = stableToken.write.setDailyRewardCap([200n], { account: admin.account });
+      const setTx = stableToken.write.setDailyRewardCap([50n], { account: admin.account });
       await viem.assertions.emitWithArgs(setTx, stableToken, 'DailyRewardCapUpdated', [
         100n,
-        200n,
+        50n,
       ]);
 
-      assert.equal(await stableToken.read.dailyRewardCapBps(), 200n);
+      assert.equal(await stableToken.read.dailyRewardCapBps(), 50n);
     });
 
     it('Should revert above MAX_DAILY_REWARD_CAP_BPS', async function () {
@@ -245,7 +260,7 @@ describe('StableToken Reward Minting', async function () {
       const { stableToken, admin, viem } = await createStableTokenFixture(connection);
 
       await viem.assertions.revertWithCustomError(
-        stableToken.write.setDailyRewardCap([501n], { account: admin.account }),
+        stableToken.write.setDailyRewardCap([101n], { account: admin.account }),
         stableToken,
         'ExcessiveRewardCap',
       );
@@ -256,7 +271,7 @@ describe('StableToken Reward Minting', async function () {
       const { stableToken, users, viem } = await createStableTokenFixture(connection);
 
       await viem.assertions.revertWithCustomError(
-        stableToken.write.setDailyRewardCap([200n], { account: users[0].account }),
+        stableToken.write.setDailyRewardCap([50n], { account: users[0].account }),
         stableToken,
         'AccessControlUnauthorizedAccount',
       );
@@ -284,8 +299,7 @@ describe('StableToken Reward Minting', async function () {
       const available = await stableToken.read.availableRewardMint();
       const totalSupply = await stableToken.read.totalSupply();
       const maxMint = totalSupply * 100n / 10000n;
-      assert.ok(available > 0n);
-      assert.ok(available < maxMint);
+      assert.equal(available, maxMint - parseEther('5000'));
     });
   });
 

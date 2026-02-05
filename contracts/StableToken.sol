@@ -23,8 +23,8 @@ contract StableToken is
     /// @dev Computed as keccak256("REWARD_DISTRIBUTOR_ROLE")
     bytes32 public constant REWARD_DISTRIBUTOR_ROLE = keccak256("REWARD_DISTRIBUTOR_ROLE");
 
-    /// @notice Hard ceiling for daily reward cap in basis points (5%)
-    uint256 public constant MAX_DAILY_REWARD_CAP_BPS = 500;
+    /// @notice Hard ceiling for daily reward cap in basis points (1%)
+    uint256 public constant MAX_DAILY_REWARD_CAP_BPS = 100;
 
     /// @notice Address that receives minted reward tokens
     address public rewardRecipient;
@@ -32,11 +32,11 @@ contract StableToken is
     /// @notice Daily reward cap in basis points relative to total supply
     uint256 public dailyRewardCapBps;
 
-    /// @notice Amount of reward tokens minted in the current rolling period
+    /// @notice Amount of reward tokens minted in the current UTC day
     uint256 public mintedInCurrentPeriod;
 
-    /// @notice Timestamp of the last reward mint operation
-    uint256 public lastMintTimestamp;
+    /// @notice UTC day number of the last reward mint operation (block.timestamp / 86400)
+    uint256 public lastMintDay;
 
     uint256[40] private __gap;
 
@@ -134,7 +134,7 @@ contract StableToken is
     }
 
     /// @notice Mints reward tokens to the configured reward recipient
-    /// @dev Restricted to accounts with the REWARD_DISTRIBUTOR_ROLE. Applies linear decay to the rolling mint window.
+    /// @dev Restricted to accounts with the REWARD_DISTRIBUTOR_ROLE. Subject to UTC-day boundary rate limiting.
     /// @param amount The amount of reward tokens to mint
     function mintReward(uint256 amount) external onlyRole(REWARD_DISTRIBUTOR_ROLE) {
         if (amount == 0) revert ZeroRewardAmount();
@@ -147,7 +147,7 @@ contract StableToken is
         if (amount > available) revert ExceedsDailyRewardCap(amount, available);
 
         mintedInCurrentPeriod = currentMinted + amount;
-        lastMintTimestamp = block.timestamp;
+        lastMintDay = block.timestamp / 86400;
 
         _mint(rewardRecipient, amount);
         emit RewardMinted(rewardRecipient, amount);
@@ -166,12 +166,11 @@ contract StableToken is
     /// @param newImplementation The address of the new implementation contract (unused but required by interface)
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyRole(DEFAULT_ADMIN_ROLE) {}
 
-    /// @dev Calculates the effective minted amount in the current period using linear decay
-    /// @return The decayed minted amount
+    /// @dev Returns the minted amount in the current UTC day, or 0 if a new day has started
+    /// @return The minted amount for the current UTC day
     function _currentMintedInPeriod() internal view returns (uint256) {
-        uint256 elapsed = block.timestamp - lastMintTimestamp;
-        if (elapsed >= 1 days) return 0;
-        uint256 decayed = mintedInCurrentPeriod * elapsed / 1 days;
-        return mintedInCurrentPeriod - decayed;
+        uint256 currentDay = block.timestamp / 86400;
+        if (currentDay != lastMintDay) return 0;
+        return mintedInCurrentPeriod;
     }
 }
