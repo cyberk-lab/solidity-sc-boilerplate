@@ -77,10 +77,32 @@ Deploy contracts using Hardhat Ignition:
 npx hardhat ignition deploy ignition/modules/Counter.ts --network <network_name>
 ```
 
+## Contracts
+
+### StakingVault
+
+A staking vault where users deposit stabletoken and receive share tokens (sSTBL). Share price increases when anyone transfers stabletoken directly to the vault (donation). Redemptions require a configurable cooldown period.
+
+**Key features:**
+
+- **Deposit**: `deposit(uint256 assets)` — deposits stabletoken, mints sSTBL shares at current exchange rate
+- **Share price appreciation**: `totalAssets() / totalSupply()` — price increases with direct transfers to vault
+- **Delayed redemption**: `requestRedeem(shares)` → wait `redemptionDelay` → `completeRedeem()`
+- **Cancel redemption**: `cancelRedeem()` — unlocks shares if user changes their mind
+- **Inflation protection**: Virtual offset + minimum first deposit
+
+**Deploy:**
+
+```bash
+npx hardhat ignition deploy ignition/modules/StakingVault.ts --network <network> \
+  --parameters '{"StakingVaultModule": {"admin": "0x...", "stableToken": "0x..."}}'
+```
+
 ## Project Structure
 
 - `contracts/`: Solidity smart contracts.
 - `test/`: Tests using Hardhat Runner and Viem.
+- `test/foundry/`: Foundry fuzz and invariant tests.
 - `ignition/`: Deployment modules.
 - `tasks/`: Custom Hardhat tasks.
 - `plugins/`: Custom Hardhat plugins.

@@ -38,29 +38,33 @@ export const createStableTokenFixture = async (connection: NetworkConnection) =>
   const { ignition, viem } = connection;
   const publicClient = await viem.getPublicClient();
 
-  const [admin, minter, ...users] = await viem.getWalletClients();
+  const [admin, minter, rewardRecipient, ...users] = await viem.getWalletClients();
 
   const { stableToken } = await ignition.deploy(StableTokenModule, {
     parameters: {
       StableTokenModule: {
         admin: admin.account.address,
+        rewardRecipient: rewardRecipient.account.address,
+        dailyRewardCapBps: 100n,
       },
     },
   });
 
-  return { stableToken, admin, minter, users, publicClient, viem };
+  return { stableToken, admin, minter, rewardRecipient, users, publicClient, viem };
 };
 
 export const createMinterFixture = async (connection: NetworkConnection) => {
   const { ignition, viem } = connection;
   const publicClient = await viem.getPublicClient();
 
-  const [admin, treasuryVault, ...users] = await viem.getWalletClients();
+  const [admin, treasuryVault, rewardRecipient, ...users] = await viem.getWalletClients();
 
   const { stableToken } = await ignition.deploy(StableTokenModule, {
     parameters: {
       StableTokenModule: {
         admin: admin.account.address,
+        rewardRecipient: rewardRecipient.account.address,
+        dailyRewardCapBps: 100n,
       },
     },
   });
@@ -84,6 +88,26 @@ export const createMinterFixture = async (connection: NetworkConnection) => {
   await minter.write.addCollateralToken([usdt.address], { account: admin.account });
 
   return { minter, stableToken, usdc, usdt, admin, treasuryVault, users, publicClient, viem };
+};
+
+export const createStakingVaultFixture = async (connection: NetworkConnection) => {
+  const { viem } = connection;
+  const publicClient = await viem.getPublicClient();
+  const [admin, ...users] = await viem.getWalletClients();
+
+  const stableToken = await viem.deployContract('MockERC20', ['StableToken', 'STBL', 18]);
+
+  const vaultImpl = await viem.deployContract('StakingVault');
+  const SEVEN_DAYS = 7n * 24n * 60n * 60n;
+  const initData = encodeFunctionData({
+    abi: vaultImpl.abi,
+    functionName: 'initialize',
+    args: [stableToken.address, admin.account.address, SEVEN_DAYS],
+  });
+  const vaultProxy = await viem.deployContract('ERC1967Proxy', [vaultImpl.address, initData]);
+  const vault = await viem.getContractAt('StakingVault', vaultProxy.address);
+
+  return { vault, stableToken, admin, users, publicClient, viem };
 };
 
 export const deployImplementation = async (connection: NetworkConnection) => {

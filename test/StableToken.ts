@@ -26,7 +26,7 @@ describe('StableToken', async function () {
       const { stableToken, admin, viem } = await createStableTokenFixture(connection);
 
       await viem.assertions.revertWithCustomError(
-        stableToken.write.initialize([admin.account.address]),
+        stableToken.write.initialize([admin.account.address, admin.account.address, 100n]),
         stableToken,
         'InvalidInitialization'
       );
