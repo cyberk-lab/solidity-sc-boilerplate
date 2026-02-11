@@ -1,5 +1,5 @@
-import hardhatToolboxViemPlugin from '@nomicfoundation/hardhat-toolbox-viem';
 import hardhatNetworkHelpers from '@nomicfoundation/hardhat-network-helpers';
+import hardhatToolboxViemPlugin from '@nomicfoundation/hardhat-toolbox-viem';
 import hardhatViemAssertions from '@nomicfoundation/hardhat-viem-assertions';
 import { configVariable, defineConfig } from 'hardhat/config';
 
@@ -58,7 +58,7 @@ export default defineConfig({
       type: 'http',
       chainType: 'l1',
       url: configVariable('SEPOLIA_RPC_URL'),
-      accounts: [configVariable('BOILERPLATE_SEPOLIA_PRIVATE_KEY')],
+      accounts: [configVariable('CYBERK_SEPOLIA')],
     },
   },
 });

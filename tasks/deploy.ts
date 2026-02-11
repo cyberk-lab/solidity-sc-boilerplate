@@ -1,13 +1,13 @@
 import { task } from 'hardhat/config';
-import { HardhatRuntimeEnvironment } from 'hardhat/types/hre';
-import { NetworkConnection } from 'hardhat/types/network';
-import CounterModule from '../ignition/modules/Counter.js';
+import type { HardhatRuntimeEnvironment } from 'hardhat/types/hre';
+import type { NetworkConnection } from 'hardhat/types/network';
+import StableCoinSystemModule from '../ignition/modules/StableCoinSystem.js';
 import { getConfig } from './CONFIG.js';
 
 export const deployTask = task('deploy', 'Deploy the contract')
   .setAction(async () => {
     return {
-      default: async (_, hre: HardhatRuntimeEnvironment) => {
+      default: async (_: unknown, hre: HardhatRuntimeEnvironment) => {
         const connection = await hre.network.connect();
         const args = getConfig(hre.globalOptions.network);
         return runDeployTask(args, connection);
@@ -19,17 +19,21 @@ export const deployTask = task('deploy', 'Deploy the contract')
 export async function runDeployTask(
   args: {
     admin: string;
+    rewardRecipient: string;
+    dailyRewardCapBps: bigint;
+    redemptionDelay: bigint;
   },
   connection: NetworkConnection
 ) {
-  const { admin } = args;
+  const { admin, rewardRecipient, dailyRewardCapBps, redemptionDelay } = args;
   const { ignition } = connection;
 
   const params = {
-    CounterModule: { admin },
+    StableTokenModule: { admin, rewardRecipient, dailyRewardCapBps },
+    StakingVaultModule: { admin, redemptionDelay },
   };
 
-  return await ignition.deploy(CounterModule, {
+  return await ignition.deploy(StableCoinSystemModule, {
     parameters: params,
     config: {
       requiredConfirmations: 1,

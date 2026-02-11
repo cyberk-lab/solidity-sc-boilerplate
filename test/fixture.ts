@@ -1,16 +1,20 @@
 import { NetworkConnection } from 'hardhat/types/network';
-import { runDeployTask } from '../tasks/deploy.js';
+import CounterModule from '../ignition/modules/Counter.js';
 import UpgradeModule from '../ignition/modules/Upgrade.js';
 import StableTokenModule from '../ignition/modules/StableToken.js';
 import { encodeFunctionData, keccak256, toHex } from 'viem';
 
 export const createCounterFixture = async (connection: NetworkConnection) => {
-  const { viem } = connection;
+  const { ignition, viem } = connection;
   const publicClient = await viem.getPublicClient();
 
   const [admin, ...users] = await viem.getWalletClients();
 
-  const { counter } = await runDeployTask({ admin: admin.account.address }, connection);
+  const { counter } = await ignition.deploy(CounterModule, {
+    parameters: {
+      CounterModule: { admin: admin.account.address },
+    },
+  });
 
   return { counter, admin, users, publicClient, viem };
 };

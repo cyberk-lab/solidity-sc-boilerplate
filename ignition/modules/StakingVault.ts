@@ -1,9 +1,11 @@
 import { buildModule } from '@nomicfoundation/hardhat-ignition/modules';
+import StableTokenModule from './StableToken.js';
 
 export default buildModule('StakingVaultModule', (m) => {
   const admin = m.getParameter('admin');
-  const stableToken = m.getParameter('stableToken');
   const redemptionDelay = m.getParameter('redemptionDelay', 7n * 24n * 60n * 60n);
+
+  const { stableToken } = m.useModule(StableTokenModule);
 
   const vaultImpl = m.contract('StakingVault', [], { id: 'StakingVaultImpl' });
   const vaultProxy = m.contract(
@@ -16,5 +18,5 @@ export default buildModule('StakingVaultModule', (m) => {
 
   const vault = m.contractAt('StakingVault', vaultProxy);
 
-  return { vault };
+  return { vault, stableToken };
 });
