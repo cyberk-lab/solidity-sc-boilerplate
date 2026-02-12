@@ -15,9 +15,10 @@ contract StableTokenFuzzTest is Test {
 
     function setUp() public {
         StableToken impl = new StableToken();
-        bytes memory data = abi.encodeCall(StableToken.initialize, (admin, vault, DAILY_CAP_BPS));
+        bytes memory data = abi.encodeCall(StableToken.initialize, (admin, DAILY_CAP_BPS));
         ERC1967Proxy proxy = new ERC1967Proxy(address(impl), data);
         stableToken = StableToken(address(proxy));
+        stableToken.setRewardRecipient(vault);
         stableToken.grantRole(stableToken.REWARD_DISTRIBUTOR_ROLE(), distributor);
         stableToken.grantRole(stableToken.MINTER_ROLE(), minterAddr);
     }

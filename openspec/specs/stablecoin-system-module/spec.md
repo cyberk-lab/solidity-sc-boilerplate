@@ -13,14 +13,15 @@ The module SHALL return both `stableToken` and `vault` contract references.
 
 #### Scenario: Full system deployment
 
-- **WHEN** `ignition.deploy(StableCoinSystemModule, { parameters })` is called with `admin`, `rewardRecipient`, and `dailyRewardCapBps`
+- **WHEN** `ignition.deploy(StableCoinSystemModule, { parameters })` is called with `admin` and `dailyRewardCapBps`
 - **THEN** StableToken is deployed first (impl + proxy + initialize)
 - **AND** StakingVault is deployed next using the StableToken proxy address
+- **AND** `setRewardRecipient(vault)` is called on StableToken to wire the reward recipient
 - **AND** the returned object contains `{ stableToken, vault }`
 
 ### Requirement: Updated Deploy Task
 
-The deploy task SHALL invoke `StableCoinSystemModule` instead of `CounterModule`, forwarding `admin`, `rewardRecipient`, `dailyRewardCapBps`, and optional `redemptionDelay` from config.
+The deploy task SHALL invoke `StableCoinSystemModule` instead of `CounterModule`, forwarding `admin`, `dailyRewardCapBps`, and optional `redemptionDelay` from config.
 
 #### Scenario: Deploy via CLI
 

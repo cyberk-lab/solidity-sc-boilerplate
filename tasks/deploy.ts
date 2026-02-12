@@ -19,17 +19,16 @@ export const deployTask = task('deploy', 'Deploy the contract')
 export async function runDeployTask(
   args: {
     admin: string;
-    rewardRecipient: string;
     dailyRewardCapBps: bigint;
     redemptionDelay: bigint;
   },
   connection: NetworkConnection
 ) {
-  const { admin, rewardRecipient, dailyRewardCapBps, redemptionDelay } = args;
+  const { admin, dailyRewardCapBps, redemptionDelay } = args;
   const { ignition } = connection;
 
   const params = {
-    StableTokenModule: { admin, rewardRecipient, dailyRewardCapBps },
+    StableTokenModule: { admin, dailyRewardCapBps },
     StakingVaultModule: { admin, redemptionDelay },
   };
 

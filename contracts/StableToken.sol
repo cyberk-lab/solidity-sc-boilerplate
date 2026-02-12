@@ -80,20 +80,17 @@ contract StableToken is
     /// @notice Initializes the stable token contract
     /// @dev Sets up ERC20 metadata, permit, access control with a 1-day admin transfer delay, and UUPS
     /// @param admin The address to be granted the default admin role
-    /// @param rewardRecipient_ The address that will receive reward mints
     /// @param dailyRewardCapBps_ The daily reward cap in basis points (must not exceed MAX_DAILY_REWARD_CAP_BPS)
-    function initialize(address admin, address rewardRecipient_, uint256 dailyRewardCapBps_) public initializer {
+    function initialize(address admin, uint256 dailyRewardCapBps_) public initializer {
         __ERC20_init("StableToken", "STBL");
         __ERC20Permit_init("StableToken");
         __AccessControlDefaultAdminRules_init(1 days, admin);
         __UUPSUpgradeable_init();
 
-        if (rewardRecipient_ == address(0)) revert InvalidRewardRecipient();
         if (dailyRewardCapBps_ > MAX_DAILY_REWARD_CAP_BPS) {
             revert ExcessiveRewardCap(dailyRewardCapBps_, MAX_DAILY_REWARD_CAP_BPS);
         }
 
-        rewardRecipient = rewardRecipient_;
         dailyRewardCapBps = dailyRewardCapBps_;
     }
 

@@ -9,8 +9,8 @@ The system SHALL provide an upgradeable ERC20 token contract named `StableToken`
 
 #### Scenario: Correct initialization
 
-- **WHEN** the contract is initialized with an admin address
-- **THEN** name is "StableToken", symbol is "STBL", decimals is 18, totalSupply is 0, defaultAdminDelay is 1 day, and admin has DEFAULT_ADMIN_ROLE
+- **WHEN** the contract is initialized with `initialize(admin, dailyRewardCapBps)`
+- **THEN** name is "StableToken", symbol is "STBL", decimals is 18, totalSupply is 0, defaultAdminDelay is 1 day, admin has DEFAULT_ADMIN_ROLE, and `rewardRecipient` is `address(0)`
 
 #### Scenario: Re-initialization prevented
 

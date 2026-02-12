@@ -48,11 +48,12 @@ export const createStableTokenFixture = async (connection: NetworkConnection) =>
     parameters: {
       StableTokenModule: {
         admin: admin.account.address,
-        rewardRecipient: rewardRecipient.account.address,
         dailyRewardCapBps: 100n,
       },
     },
   });
+
+  await stableToken.write.setRewardRecipient([rewardRecipient.account.address], { account: admin.account });
 
   return { stableToken, admin, minter, rewardRecipient, users, publicClient, viem };
 };
@@ -67,11 +68,12 @@ export const createMinterFixture = async (connection: NetworkConnection) => {
     parameters: {
       StableTokenModule: {
         admin: admin.account.address,
-        rewardRecipient: rewardRecipient.account.address,
         dailyRewardCapBps: 100n,
       },
     },
   });
+
+  await stableToken.write.setRewardRecipient([rewardRecipient.account.address], { account: admin.account });
 
   const usdc = await viem.deployContract('MockERC20', ['USD Coin', 'USDC', 6]);
   const usdt = await viem.deployContract('MockERC20', ['Tether USD', 'USDT', 6]);
