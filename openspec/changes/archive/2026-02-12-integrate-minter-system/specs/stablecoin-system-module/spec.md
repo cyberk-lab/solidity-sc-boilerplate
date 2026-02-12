@@ -1,8 +1,5 @@
-# stablecoin-system-module Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change create-stablecoin-deploy-module. Update Purpose after archive.
-## Requirements
 ### Requirement: Composite StableCoinSystem Ignition Module
 
 The system SHALL provide an Ignition module `StableCoinSystemModule` at `ignition/modules/StableCoinSystem.ts` that composes `StableTokenModule`, `StakingVaultModule`, and `MinterModule` using `m.useModule()`, deploying all three contracts in a single `ignition.deploy()` call.
@@ -33,14 +30,7 @@ The deploy task SHALL invoke `StableCoinSystemModule` instead of `CounterModule`
 - **THEN** the task reads config from `getConfig(network)`
 - **AND** deploys StableCoinSystemModule with the config parameters including `treasuryVault`
 
-### Requirement: StakingVault Module Accepts StableToken via useModule
-
-The existing `StakingVaultModule` SHALL be modified so that when composed via `m.useModule()`, it receives the `stableToken` address from the parent module rather than requiring it as a standalone parameter.
-
-#### Scenario: Composed deployment
-
-- **WHEN** StakingVaultModule is used inside StableCoinSystemModule
-- **THEN** the `stableToken` parameter is resolved from the StableToken proxy address provided by the parent
+## ADDED Requirements
 
 ### Requirement: Deploy Config Includes treasuryVault
 

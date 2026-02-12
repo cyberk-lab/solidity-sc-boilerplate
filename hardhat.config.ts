@@ -2,8 +2,10 @@ import hardhatNetworkHelpers from '@nomicfoundation/hardhat-network-helpers';
 import hardhatToolboxViemPlugin from '@nomicfoundation/hardhat-toolbox-viem';
 import hardhatViemAssertions from '@nomicfoundation/hardhat-viem-assertions';
 import { configVariable, defineConfig } from 'hardhat/config';
+import { deployTask } from './tasks/deploy.js';
 
 export default defineConfig({
+  tasks: [deployTask],
   plugins: [
     hardhatToolboxViemPlugin,
     hardhatNetworkHelpers,
@@ -16,6 +18,11 @@ export default defineConfig({
       },
     },
   ],
+  verify: {
+    etherscan: {
+      apiKey: configVariable('ETHERSCAN_API_KEY'),
+    },
+  },
   solidity: {
     npmFilesToBuild: [
       '@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol',

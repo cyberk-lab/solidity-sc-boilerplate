@@ -21,21 +21,39 @@ export async function runDeployTask(
     admin: string;
     dailyRewardCapBps: bigint;
     redemptionDelay: bigint;
+    treasuryVault: string;
+    collateralTokens: string[];
   },
   connection: NetworkConnection
 ) {
-  const { admin, dailyRewardCapBps, redemptionDelay } = args;
-  const { ignition } = connection;
+  const { admin, dailyRewardCapBps, redemptionDelay, treasuryVault, collateralTokens } = args;
+  const { ignition, viem } = connection;
 
   const params = {
     StableTokenModule: { admin, dailyRewardCapBps },
     StakingVaultModule: { admin, redemptionDelay },
+    MinterModule: { admin, treasuryVault },
   };
 
-  return await ignition.deploy(StableCoinSystemModule, {
+  const { minter } = await ignition.deploy(StableCoinSystemModule, {
     parameters: params,
     config: {
       requiredConfirmations: 1,
     },
   });
+
+  // Add collateral tokens that are not yet whitelisted
+  for (const token of collateralTokens) {
+    const isWhitelisted = await minter.read.isCollateralToken([token as `0x${string}`]);
+    if (!isWhitelisted) {
+      const hash = await minter.write.addCollateralToken([token as `0x${string}`]);
+      const publicClient = await viem.getPublicClient();
+      await publicClient.waitForTransactionReceipt({ hash });
+      console.log(`Added collateral token: ${token}`);
+    } else {
+      console.log(`Collateral token already whitelisted: ${token}`);
+    }
+  }
+
+  return { minter };
 }

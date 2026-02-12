@@ -1,0 +1,11 @@
+{
+  "StableTokenModule#StableTokenImpl": "0x4e59e1A811BF7F796c6Dd1472A189b7Dc2636C5e",
+  "StakingVaultModule#StakingVaultImpl": "0x1283142964B5E0422B8483d3CC44B46a397ade84",
+  "StableTokenModule#StableTokenProxy": "0x66a80A3f5f5160A3cA294DC698A56cA14FD5Cd80",
+  "StableTokenModule#StableToken": "0x66a80A3f5f5160A3cA294DC698A56cA14FD5Cd80",
+  "StakingVaultModule#StakingVaultProxy": "0xE0b81b34BC6e1f9d8681a90bE5De9e07b2924477",
+  "StakingVaultModule#StakingVault": "0xE0b81b34BC6e1f9d8681a90bE5De9e07b2924477",
+  "MinterModule#MinterImpl": "0x9224d9bdC47Df61e55E3b8218AfFa0670d08EBfC",
+  "MinterModule#MinterProxy": "0xDD7DD7Af4bf7E56C0Cb7c90435b44d0CC791b682",
+  "MinterModule#Minter": "0xDD7DD7Af4bf7E56C0Cb7c90435b44d0CC791b682"
+}
